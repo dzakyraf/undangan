@@ -120,81 +120,61 @@ footer {
     padding-bottom: 5rem;
 }
 
-/* polaroid-gallery */
+/* polaroid */
 
-figure img{
-    display:none;
-  }
-  figure .img {
-    width: 250px;
-    height: 250px;
-    background-size:cover;
-    background-position: center center;
-  }
-  
-  figure figcaption {
-    text-align: center;
-    font-family: 'Reenie Beanie', cursive;
-    
-  }
-  
-  figure figcaption h2 {
-    margin:0;
-    padding:0;
-    display:block;
-    line-height: 1.5em;
-    width: 250px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight:normal;
-  }
-  
-  figure figcaption p {
-    display:none;
-  }
-  
-  figure {
-    background-color: white;
-    box-shadow:         3px 3px 5px 6px rgba(0,0,0, 0.2);
-    padding: 30px;
-    width: 250px;
-    
-    transform: scale(0.7);
-    transition: all 1s ease-in-out,
-                z-index 0s ease-in-out 1s;
-    position:absolute;
-    
-    z-index:0;
-  }
-  
-  figure:nth-child(2n) {  
-    transform: rotate(10deg) scale(0.7);
-  }
-  
-  figure:nth-child(3n) {  
-    transform: rotate(-10deg) scale(0.7);
-  }
-  
-  figure.prev, figure.next{
-    top:0;
-    transform: zoom(0.9);
-  }
-  
-  figure.prev {
-    left: 0%;
-  }
-  
-  figure.next {
-    left: 100%;
-    margin-left: -300px;
-  }
-  
-  figure.current {
-    transform: rotate(0deg) scale(1);
-    left: 50%;
-    margin-left: -125px;
-    z-index:100;
-  }
 
-  /* - */
+.card-container {
+	position: relative;
+	width: 65vmin;
+	height: 80vmin;
+}
+
+.card {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: darken(white, 2%);
+	border-radius: 2px;
+	box-shadow: 2px 2px 5px rgba(#111, .35);
+	transition: transform .35s ease-out;
+	transform: translate(var(--x), var(--y)) scale(.35) rotate(var(--angle));
+	will-change: transform;
+
+	&:hover {
+		transform: scale(1) rotate(0deg);
+		z-index: 1;
+
+		&:before {
+			opacity: 1;
+		}
+	}
+}
+
+.card:before {
+	content: "";
+	display: block;
+	width: 90%;
+	height: 80%;
+	margin: 5%;
+	background: var(--image) center center no-repeat;
+	background-size: cover;
+	box-shadow: inset 0 0 5px rgba(#222, .35);
+	border-radius: 2px;
+	filter: sepia(.2) brightness(.9) contrast(1.2);
+	transition: opacity .35s ease-out;
+	opacity: .5;
+	will-change: opacity;
+}
+
+.card:after {
+	display: block;
+	content: var(--caption);
+	font-weight: 500;
+    font-family: "Nothing You Could Do";
+	color: #555;
+	font-size: 3vmin;
+	opacity: .75;
+	text-align: center;
+}
