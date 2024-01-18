@@ -1,3 +1,8 @@
+
+
+
+const pb = new PocketBase('https://lay-nodded.pockethost.io');
+
 const storage = (table) => {
 
     if (!localStorage.getItem(table)) {
@@ -200,6 +205,7 @@ const util = (() => {
         })();
     };
 
+
     const buka = async (button) => {
         button.disabled = true;
         document.querySelector('body').style.overflowY = 'scroll';
@@ -218,7 +224,8 @@ const util = (() => {
             origin: { y: 0.8 },
             zIndex: 1057
         });
-        await session.check();
+        comment.ucapan();
+        // await session.check();
         await animation();
     };
 
@@ -418,54 +425,91 @@ const like = (() => {
     const likes = storage('likes');
 
     const like = async (button) => {
-        let token = localStorage.getItem('token');
+        // let token = localStorage.getItem('token');
         let id = button.getAttribute('data-uuid');
 
-        if (!token) {
-            alert('Terdapat kesalahan, token kosong !');
-            window.location.reload();
-            return;
-        }
+        // if (!token) {
+        //     alert('Terdapat kesalahan, token kosong !');
+        //     window.location.reload();
+        //     return;
+        // }
 
         let heart = button.firstElementChild.lastElementChild;
         let info = button.firstElementChild.firstElementChild;
 
         button.disabled = true;
         info.innerText = 'Loading..';
+        let likeCount = parseInt(info.getAttribute('data-suka'));
 
         if (likes.has(id)) {
-            await request('PATCH', '/api/comment/' + likes.get(id))
-                .token(token)
-                .then((res) => {
-                    if (res.data.status) {
-                        likes.unset(id);
 
-                        heart.classList.remove('fa-solid', 'text-danger');
-                        heart.classList.add('fa-regular');
+            try {
+                likeCount = likeCount - 1;
+                const data = {
+                    "like": { "love": likeCount },
+                };
+                await pb.collection('comment').update(id, data);
+                likes.unset(id);
+                heart.classList.remove('fa-solid', 'text-danger');
+                heart.classList.add('fa-regular');
+                info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) - 1).toString());
 
-                        info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) - 1).toString());
-                    }
-                })
-                .catch((err) => {
-                    alert(`Terdapat kesalahan: ${err}`);
-                });
+            } catch (error) {
+                alert(`Terdapat kesalahan: ${err}`);
+            }
+
+
+
+            // await request('PATCH', '/api/comment/' + likes.get(id))
+            //     // .token(token)
+            //     .then((res) => {
+            //         if (res.data.status) {
+            //             likes.unset(id);
+
+            //             heart.classList.remove('fa-solid', 'text-danger');
+            //             heart.classList.add('fa-regular');
+
+            //             info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) - 1).toString());
+            //         }
+            //     })
+            //     .catch((err) => {
+            //         alert(`Terdapat kesalahan: ${err}`);
+            //     });
 
         } else {
-            await request('POST', '/api/comment/' + id)
-                .token(token)
-                .then((res) => {
-                    if (res.code == 201) {
-                        likes.set(id, res.data.uuid);
 
-                        heart.classList.remove('fa-regular');
-                        heart.classList.add('fa-solid', 'text-danger');
+            try {
+                likeCount = likeCount + 1;
+                const data = {
+                    "like": { "love": likeCount },
+                };
+                await pb.collection('comment').update(id, data);
+                likes.set(id, id);
 
-                        info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) + 1).toString());
-                    }
-                })
-                .catch((err) => {
-                    alert(`Terdapat kesalahan: ${err}`);
-                });
+                heart.classList.remove('fa-regular');
+                heart.classList.add('fa-solid', 'text-danger');
+
+                info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) + 1).toString());
+
+            } catch (error) {
+                alert(`Terdapat kesalahan: ${err}`);
+            }
+
+            // await request('POST', '/api/comment/' + id)
+            //     // .token(token)
+            //     .then((res) => {
+            //         if (res.code == 201) {
+            //             likes.set(id, res.data.id);
+
+            //             heart.classList.remove('fa-regular');
+            //             heart.classList.add('fa-solid', 'text-danger');
+
+            //             info.setAttribute('data-suka', (parseInt(info.getAttribute('data-suka')) + 1).toString());
+            //         }
+            //     })
+            //     .catch((err) => {
+            //         alert(`Terdapat kesalahan: ${err}`);
+            //     });
         }
 
         info.innerText = info.getAttribute('data-suka') + ' suka';
@@ -500,6 +544,27 @@ const comment = (() => {
             .replace(/\`\`\`(?=\S)(.*?)(?<!\s)\`\`\`/g, '<code class="font-monospace text-dark">$1</code>');
     };
 
+    const convertToUnix = (date) => {
+        var dateString = date;
+
+        // Create a new Date object using the date string
+        var dateObject = new Date(dateString);
+
+        // Get the Unix timestamp including milliseconds
+        var unixTimestampWithMilliseconds = dateObject.getTime();
+
+        moment.locale('id');
+
+        // Convert the Unix timestamp to a moment object
+        var momentObject = moment(unixTimestampWithMilliseconds);
+
+        // Get the difference in time from now
+        var timeAgo = momentObject.fromNow();
+        return timeAgo;
+    };
+
+
+
     const resetForm = () => {
 
         buttonBatal.style.display = 'none';
@@ -524,13 +589,13 @@ const comment = (() => {
         let nama = formNama.value;
         let hadir = parseInt(formKehadiran.value);
         let komentar = formPesan.value;
-        let token = localStorage.getItem('token') ?? '';
+        // let token = localStorage.getItem('token') ?? '';
 
-        if (token.length == 0) {
-            alert('Terdapat kesalahan, token kosong !');
-            window.location.reload();
-            return;
-        }
+        // if (token.length == 0) {
+        //     alert('Terdapat kesalahan, token kosong !');
+        //     window.location.reload();
+        //     return;
+        // }
 
         if (nama.length == 0) {
             alert('nama tidak boleh kosong');
@@ -561,22 +626,36 @@ const comment = (() => {
         buttonKirim.innerHTML = loader;
 
         let isSuccess = false;
-        await request('POST', '/api/comment')
-            .token(token)
-            .body({
-                nama: nama,
-                hadir: hadir == 1,
-                komentar: komentar
-            })
-            .then((res) => {
-                if (res.code == 201) {
-                    owns.set(res.data.uuid, res.data.own);
-                    isSuccess = true;
-                }
-            })
-            .catch((err) => {
-                alert(`Terdapat kesalahan: ${err}`);
-            });
+        const data = {
+            "komentar": komentar,
+            "nama": nama,
+            "like": { "love": 0 },
+            "hadir": hadir == 1,
+            "is_reply": false,
+            "parent_id": null
+        };
+        try {
+            const res = await pb.collection('comment').create(data);
+            isSuccess = true;
+        } catch (error) {
+            alert(`Terdapat kesalahan: ${err}`);
+        }
+        // await request('POST', '/api/comment')
+        //     .token(token)
+        //     .body({
+        //         nama: nama,
+        //         hadir: hadir == 1,
+        //         komentar: komentar
+        //     })
+        //     .then((res) => {
+        //         if (res.code == 201) {
+        //             owns.set(res.data.id, res.data.own);
+        //             isSuccess = true;
+        //         }
+        //     })
+        //     .catch((err) => {
+        //         alert(`Terdapat kesalahan: ${err}`);
+        //     });
 
         if (isSuccess) {
             await pagination.reset();
@@ -599,20 +678,19 @@ const comment = (() => {
         button.innerText = 'Loading...';
 
         let id = button.getAttribute('data-uuid');
-        let token = localStorage.getItem('token') ?? '';
+        // let token = localStorage.getItem('token') ?? '';
 
-        if (token.length == 0) {
-            alert('Terdapat kesalahan, token kosong !');
-            window.location.reload();
-            return;
-        }
+        // if (token.length == 0) {
+        //     alert('Terdapat kesalahan, token kosong !');
+        //     window.location.reload();
+        //     return;
+        // }
 
         document.getElementById('balasan').innerHTML = renderLoading(1);
         formKehadiran.style.display = 'none';
         document.getElementById('label-kehadiran').style.display = 'none';
 
-        await request('GET', '/api/comment/' + id)
-            .token(token)
+        await request('GET', `/api/v2/comment/detail?id=${id}`)
             .then((res) => {
                 if (res.code == 200) {
                     buttonKirim.style.display = 'none';
@@ -622,25 +700,53 @@ const comment = (() => {
                     temporaryID = id;
 
                     document.getElementById('balasan').innerHTML = `
-                    <div class="my-3">
-                        <h6>Balasan</h6>
-                        <div id="id-balasan" data-uuid="${id}" class="card-body bg-light shadow p-3 rounded-4">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center">
-                                <p class="text-dark text-truncate m-0 p-0" style="font-size: 0.95rem;">
-                                    <strong>${util.escapeHtml(res.data.nama)}</strong>
-                                </p>
-                                <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${res.data.created_at}</small>
-                            </div>
-                            <hr class="text-dark my-1">
-                            <p class="text-dark m-0 p-0" style="white-space: pre-line">${convertMarkdownToHTML(util.escapeHtml(res.data.komentar))}</p>
+                <div class="my-3">
+                    <h6>Balasan</h6>
+                    <div id="id-balasan" data-uuid="${id}" class="card-body bg-light shadow p-3 rounded-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center">
+                            <p class="text-dark text-truncate m-0 p-0" style="font-size: 0.95rem;">
+                                <strong>${util.escapeHtml(res.data.nama)}</strong>
+                            </p>
+                            <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${convertToUnix(res.data.created)}</small>
                         </div>
-                    </div>`;
+                        <hr class="text-dark my-1">
+                        <p class="text-dark m-0 p-0" style="white-space: pre-line">${convertMarkdownToHTML(util.escapeHtml(res.data.komentar))}</p>
+                    </div>
+                </div>`;
                 }
             })
-            .catch((err) => {
-                resetForm();
-                alert(`Terdapat kesalahan: ${err}`);
-            });
+            .catch((err) => alert(`Terdapat kesalahan: ${err}`));
+
+        // await request('GET', '/api/comment/' + id)
+        //     .token(token)
+        //     .then((res) => {
+        //         if (res.code == 200) {
+        //             buttonKirim.style.display = 'none';
+        //             buttonBatal.style.display = 'block';
+        //             buttonBalas.style.display = 'block';
+
+        //             temporaryID = id;
+
+        //             document.getElementById('balasan').innerHTML = `
+        //             <div class="my-3">
+        //                 <h6>Balasan</h6>
+        //                 <div id="id-balasan" data-uuid="${id}" class="card-body bg-light shadow p-3 rounded-4">
+        //                     <div class="d-flex flex-wrap justify-content-between align-items-center">
+        //                         <p class="text-dark text-truncate m-0 p-0" style="font-size: 0.95rem;">
+        //                             <strong>${util.escapeHtml(res.data.nama)}</strong>
+        //                         </p>
+        //                         <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${convertToUnix(res.data.created)}</small>
+        //                     </div>
+        //                     <hr class="text-dark my-1">
+        //                     <p class="text-dark m-0 p-0" style="white-space: pre-line">${convertMarkdownToHTML(util.escapeHtml(res.data.komentar))}</p>
+        //                 </div>
+        //             </div>`;
+        //         }
+        //     })
+        //     .catch((err) => {
+        //         resetForm();
+        //         alert(`Terdapat kesalahan: ${err}`);
+        //     });
 
         document.getElementById('ucapan').scrollIntoView({ behavior: 'smooth' });
         button.disabled = false;
@@ -651,17 +757,17 @@ const comment = (() => {
         return `
         <div class="d-flex flex-wrap justify-content-between align-items-center">
             <div class="d-flex flex-wrap justify-content-start align-items-center">
-                <button style="font-size: 0.8rem;" onclick="comment.balasan(this)" data-uuid="${data.uuid}" class="btn btn-sm btn-outline-dark rounded-3 py-0">Balas</button>
-                ${owns.has(data.uuid)
+                <button style="font-size: 0.8rem;" onclick="comment.balasan(this)" data-uuid="${data.id}" class="btn btn-sm btn-outline-dark rounded-3 py-0">Balas</button>
+                ${owns.has(data.id)
                 ? `
-                <button style="font-size: 0.8rem;" onclick="comment.edit(this)" data-uuid="${data.uuid}" class="btn btn-sm btn-outline-dark rounded-3 py-0 ms-1">Ubah</button>
-                <button style="font-size: 0.8rem;" onclick="comment.hapus(this)" data-uuid="${data.uuid}" class="btn btn-sm btn-outline-dark rounded-3 py-0 ms-1">Hapus</button>`
+                <button style="font-size: 0.8rem;" onclick="comment.edit(this)" data-uuid="${data.id}" class="btn btn-sm btn-outline-dark rounded-3 py-0 ms-1">Ubah</button>
+                <button style="font-size: 0.8rem;" onclick="comment.hapus(this)" data-uuid="${data.id}" class="btn btn-sm btn-outline-dark rounded-3 py-0 ms-1">Hapus</button>`
                 : ''}
             </div>
-            <button style="font-size: 0.8rem;" onclick="like.like(this)" data-uuid="${data.uuid}" class="btn btn-sm btn-outline-dark rounded-2 py-0 px-0">
+            <button style="font-size: 0.8rem;" onclick="like.like(this)" data-uuid="${data.id}" class="btn btn-sm btn-outline-dark rounded-2 py-0 px-0">
                 <div class="d-flex justify-content-start align-items-center">
                     <p class="my-0 mx-1" data-suka="${data.like.love}">${data.like.love} suka</p>
-                    <i class="py-1 me-1 p-0 ${likes.has(data.uuid) ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart'}"></i>
+                    <i class="py-1 me-1 p-0 ${likes.has(data.id) ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart'}"></i>
                 </div>
             </button>
         </div>
@@ -673,12 +779,12 @@ const comment = (() => {
 
         comment.forEach((data) => {
             result += `
-            <div class="card-body border-start bg-light py-2 ps-2 pe-0 my-2 ms-2 me-0" id="${data.uuid}">
+            <div class="card-body border-start bg-light py-2 ps-2 pe-0 my-2 ms-2 me-0" id="${data.id}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center">
                     <p class="text-dark text-truncate m-0 p-0" style="font-size: 0.95rem;">
                         <strong>${util.escapeHtml(data.nama)}</strong>
                     </p>
-                    <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${data.created_at}</small>
+                    <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${convertToUnix(data.created)}</small>
                 </div>
                 <hr class="text-dark my-1">
                 <p class="text-dark mt-0 mb-1 mx-0 p-0" style="white-space: pre-line">${convertMarkdownToHTML(util.escapeHtml(data.komentar))}</p>
@@ -693,12 +799,12 @@ const comment = (() => {
         const DIV = document.createElement('div');
         DIV.classList.add('mb-3');
         DIV.innerHTML = `
-        <div class="card-body bg-light shadow p-3 m-0 rounded-4" data-parent="true" id="${data.uuid}">
+        <div class="card-body bg-light shadow p-3 m-0 rounded-4" data-parent="true" id="${data.id}">
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <p class="text-dark text-truncate m-0 p-0" style="font-size: 0.95rem;">
                     <strong class="me-1">${util.escapeHtml(data.nama)}</strong><i class="fa-solid ${data.hadir ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger'}"></i>
                 </p>
-                <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${data.created_at}</small>
+                <small class="text-dark m-0 p-0" style="font-size: 0.75rem;">${convertToUnix(data.created)}</small>
             </div>
             <hr class="text-dark my-1">
             <p class="text-dark mt-0 mb-1 mx-0 p-0" style="white-space: pre-line">${convertMarkdownToHTML(util.escapeHtml(data.komentar))}</p>
@@ -711,15 +817,18 @@ const comment = (() => {
         const UCAPAN = document.getElementById('daftar-ucapan');
         UCAPAN.innerHTML = renderLoading(pagination.getPer());
 
-        let token = localStorage.getItem('token') ?? '';
-        if (token.length == 0) {
-            alert('Terdapat kesalahan, token kosong !');
-            window.location.reload();
-            return;
-        }
+        // let token = localStorage.getItem('token') ?? '';
+        // if (token.length == 0) {
+        //     alert('Terdapat kesalahan, token kosong !');
+        //     window.location.reload();
+        //     return;
+        // }
 
-        await request('GET', `/api/comment?per=${pagination.getPer()}&next=${pagination.getNext()}`)
-            .token(token)
+        // const comm = await pb.collection("comment").getList(pagination.getNext(), pagination.getPer(), { expand: "comments" });
+        // console.log(comm);
+
+        await request('GET', `/api/v2/comment?per=${pagination.getPer()}&next=${pagination.getNext()}`)
+            // .token(token)
             .then((res) => {
                 if (res.code == 200) {
                     UCAPAN.innerHTML = null;
@@ -729,6 +838,8 @@ const comment = (() => {
                     if (res.data.length == 0) {
                         UCAPAN.innerHTML = `<div class="h6 text-center">Tidak ada data</div>`;
                     }
+                } else {
+                    console.error(res);
                 }
             })
             .catch((err) => alert(`Terdapat kesalahan: ${err}`));
@@ -761,14 +872,9 @@ const comment = (() => {
     const balas = async () => {
         let nama = formNama.value;
         let komentar = formPesan.value;
-        let token = localStorage.getItem('token') ?? '';
-        let id = document.getElementById('id-balasan').getAttribute('data-uuid');
 
-        if (token.length == 0) {
-            alert('Terdapat kesalahan, token kosong !');
-            window.location.reload();
-            return;
-        }
+        let uid = document.getElementById('id-balasan').getAttribute('data-uuid');
+
 
         if (nama.length == 0) {
             alert('nama tidak boleh kosong');
@@ -794,28 +900,51 @@ const comment = (() => {
         buttonBalas.innerHTML = loader;
 
         let isSuccess = false;
-        await request('POST', '/api/comment')
-            .token(token)
-            .body({
-                nama: nama,
-                id: id,
-                komentar: komentar
-            })
-            .then((res) => {
-                if (res.code == 201) {
-                    isSuccess = true;
-                    owns.set(res.data.uuid, res.data.own);
-                }
-            })
-            .catch((err) => {
-                alert(`Terdapat kesalahan: ${err}`);
-            });
 
-        if (isSuccess) {
+        const data = {
+            "komentar": komentar,
+            "nama": nama,
+            "like": { "love": 0 },
+            "hadir": true,
+            "is_reply": true,
+            "parent_id": null
+        };
+        try {
+            const { id, ...res } = await pb.collection('comment').create(data);
+            await pb.collection('comment').update(uid, {
+                'reply_id+': id,
+            })
+
             await ucapan();
             document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
             resetForm();
+        } catch (error) {
+            alert(`Terdapat kesalahan: ${err}`);
         }
+
+
+        // await request('POST', '/api/comment')
+        //     .token(token)
+        //     .body({
+        //         nama: nama,
+        //         id: id,
+        //         komentar: komentar
+        //     })
+        //     .then((res) => {
+        //         if (res.code == 201) {
+        //             isSuccess = true;
+        //             owns.set(res.data.id, res.data.own);
+        //         }
+        //     })
+        //     .catch((err) => {
+        //         alert(`Terdapat kesalahan: ${err}`);
+        //     });
+
+        // if (isSuccess) {
+        //     await ucapan();
+        //     document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        //     resetForm();
+        // }
 
         buttonBatal.disabled = false;
         buttonBalas.disabled = false;
@@ -997,19 +1126,3 @@ const comment = (() => {
     };
 })();
 
-$('figure').addClass("next").first().removeClass("next").addClass("current");
-
-setInterval(function() { 
-  var nxt = $('figure.current')
-    .removeClass("current")
-    .addClass("prev")
-    .next();
-  if(nxt.length == 0) {
-    
-    nxt = $('figure:first');
-    $('figure:gt(0)').addClass('next').removeClass('prev');
-  }
-  
-    nxt.addClass("current")
-    .removeClass("next");
-},  2000);
