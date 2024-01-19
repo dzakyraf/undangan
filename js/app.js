@@ -3,6 +3,48 @@
 
 const pb = new PocketBase('https://lay-nodded.pockethost.io');
 
+var activeVintalight = function activeVintalight(container) {
+    container.addEventListener("click", function (e) {
+        var element = e.target;
+        if (element.tagName == "DIV") {
+            var elementMain = document.querySelector('main');
+            var src = element.getAttribute("data-src")
+                , descrip = "-"
+                , vintalightOverlay = document.createElement("div");
+            vintalightOverlay.classList.add("vintalight-overlay");
+            vintalightOverlay.innerHTML = "\n                <figure class=\"vintalight__container active\">\n                    <div class=\"vintalight__container__photo\">\n                        <img src=\"" + src + "\" alt=\"" + descrip + "\" class=\"vintalight__container__photo__img\"/>\n                    </div>\n                    <figcaption class=\"vintalight__container__caption\">\n                        <h3 class=\"vintalight__container__caption__text\">" + descrip + "</h3>\n                    </figcaption>\n                    <button class=\"vintalight__button\" id=\"button-close\">\u2715</button>\n                </figure>\n            ";
+            // elementMain.appendChild(vintalightOverlay);
+
+            var firstChild = elementMain.firstChild;
+
+            // Append the new child before the first child
+            elementMain.insertBefore(vintalightOverlay, firstChild);
+
+            setTimeout(function () {
+                vintalightOverlay.classList.add("active");
+            }, 1);
+            document.body.style.overflow = "hidden";
+
+            
+            document.getElementById("button-close").addEventListener("click", function () {
+                vintalightOverlay.classList.remove("active");
+                setTimeout(function () {
+                    elementMain.removeChild(vintalightOverlay);
+                }, 500);
+                document.body.style.overflow = "auto";
+                
+            });
+            window.addEventListener("keyup", function (e) {
+                if (e.key === "Escape")
+                    document.getElementById("button-close").click();
+            });
+        }
+    });
+};
+window.addEventListener("load", activeVintalight(document.getElementById("vintalight")));
+
+
+
 const storage = (table) => {
 
     if (!localStorage.getItem(table)) {

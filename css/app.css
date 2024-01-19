@@ -142,14 +142,14 @@ footer {
 	transform: translate(var(--x), var(--y)) scale(.35) rotate(var(--angle));
 	will-change: transform;
 
-	&:hover {
+	/* &:hover {
 		transform: scale(1) rotate(0deg);
 		z-index: 1;
 
 		&:before {
 			opacity: 1;
 		}
-	}
+	} */
 }
 
 .card:before {
