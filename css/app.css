@@ -7,6 +7,7 @@ body {
     padding: 0 !important;
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
+    background-color: #dd8f8f !important;
 }
 
 body::-webkit-scrollbar {
@@ -109,13 +110,13 @@ body::-webkit-scrollbar {
 }
 
 .dark-section {
-    background-color: #111111 !important;
+    background-color: #ebafaf !important;
     margin-top: -0.5rem;
     margin-bottom: -0.5rem;
 }
 
 footer {
-    background-color: #111111 !important;
+    background-color: #ebafaf !important;
     margin-top: -0.5rem;
     padding-bottom: 5rem;
 }
